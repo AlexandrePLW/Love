@@ -88,8 +88,9 @@
                 
                 <h2 class="text-[10px] uppercase tracking-[0.3em] text-rose-400 mb-4 font-semibold">Depuis notre rencontre</h2>
                 
-                <div id="days-container" class="animate-count">
-                    <span id="days" class="text-7xl md:text-8xl font-bold text-gray-800 tracking-tighter">0</span>
+                <div id="days-container" class="animate-count flex items-baseline justify-center gap-2">
+                    <span id="days" class="text-7xl md:text-8xl font-bold text-gray-800 tracking-tighter line-height-1">0</span>
+                    <span class="font-romantic text-3xl md:text-4xl text-rose-500 mb-2">jours</span>
                 </div>
                 
                 <div class="text-sm uppercase tracking-widest text-rose-500 font-bold mt-2">Se sont écoulés</div>
@@ -174,13 +175,13 @@
         }
 
         function triggerLove() {
-            for(let i = 0; i < 40; i++) {
+            for(let i = 0; i < 50; i++) {
                 setTimeout(createHeart, i * 60);
             }
         }
 
         // Cœurs ambiants légers
-        setInterval(createHeart, 2500);
+        setInterval(createHeart, 1000);
         
         // Initialisation
         updateCounter();

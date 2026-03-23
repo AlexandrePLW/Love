@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notre Anniversaire - 1 An d'Amour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fff1f2 0%, #fce7f3 100%);
+            overflow-x: hidden;
+        }
+        .font-romantic { font-family: 'Dancing Script', cursive; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 32px;
+            box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.1);
+        }
+
+        .heart {
+            position: absolute;
+            color: #fb7185;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatUp linear forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1.5) rotate(360deg); opacity: 0; }
+        }
+
+        .pulse-heart {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes countIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-count {
+            animation: countIn 1s ease-out forwards;
+        }
+
+        .img-container {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+
+    <!-- Animation de cœurs en arrière-plan -->
+    <div id="heart-container" class="fixed inset-0 pointer-events-none"></div>
+
+    <main class="relative z-10 max-w-2xl mx-auto px-4 py-12">
+        
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <div class="inline-block p-3 bg-white rounded-full shadow-sm mb-6 pulse-heart">
+                <i data-lucide="heart" class="text-rose-500 fill-rose-500 w-8 h-8"></i>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-romantic text-rose-600 mb-2">Un an avec toi</h1>
+            <p class="text-lg text-rose-400 font-light italic">Mon amoureuse</p>
+        </header>
+
+        <!-- Section Compteur -->
+        <section class="mb-12 flex justify-center">
+            <div class="glass p-10 text-center w-full relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i data-lucide="map-pinned" class="w-16 h-16 text-rose-600"></i>
+                </div>
+                
+                <h2 class="text-[10px] uppercase tracking-[0.3em] text-rose-400 mb-4 font-semibold">Depuis notre rencontre</h2>
+                
+                <div id="days-container" class="animate-count">
+                    <span id="days" class="text-7xl md:text-8xl font-bold text-gray-800 tracking-tighter">0</span>
+                </div>
+                
+                <div class="text-sm uppercase tracking-widest text-rose-500 font-bold mt-2">Se sont écoulés</div>
+
+                <div class="mt-6 pt-6 border-t border-rose-100/50">
+                    <p class="text-rose-400 text-sm italic">"La distance n'est qu'un test pour voir jusqu'où l'amour peut voyager."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Image, Mot et Bouton -->
+        <section class="text-center mb-16">
+            <div class="glass p-6 md:p-10 flex flex-col items-center gap-8">
+                <!-- Image -->
+                <div class="w-full max-w-sm overflow-hidden rounded-2xl border-4 border-white shadow-xl">
+                    <img 
+                        src="Luna.png" 
+                        alt="Message d'amour" 
+                        class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-500"
+                    >
+                </div>
+
+                <!-- Petit mot -->
+                <div class="max-w-md">
+                    <p class="text-gray-700 italic leading-relaxed text-base font-light">
+                        "Un an de FaceTime, de souvenirs gravés... Quelle année incroyable pour nos 18 ans... Entre nos premiers pas à l'université et la distance, on a tout surmonté ensemble. Je suis tellement fier de nous et de ce premier chapitre."
+                    </p>
+                </div>
+
+                <!-- Bouton Conservé -->
+                <button onclick="triggerLove()" class="group relative px-10 py-4 bg-rose-600 text-white rounded-full overflow-hidden transition-all active:scale-95 shadow-lg shadow-rose-300 hover:bg-rose-700">
+                    <span class="relative z-10 flex items-center gap-3 font-semibold text-base">
+                        <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                        Je t'aime
+                    </span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-rose-300 pb-10">
+            <p class="text-[10px] uppercase tracking-[0.4em]">Pour toujours</p>
+            <p class="text-[10px] uppercase tracking-[0.4em]">(Plus que toi)</p>
+        </footer>
+    </main>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Date de votre rencontre : (Année, Mois-1, Jour)
+        const startDate = new Date(2025, 2, 30); 
+
+        function updateCounter() {
+            const now = new Date();
+            const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            const diffTime = Math.abs(today - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+            document.getElementById('days').innerText = diffDays;
+        }
+
+        function createHeart() {
+            const container = document.getElementById('heart-container');
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            
+            const colors = ['#fb7185', '#fda4af', '#f43f5e', '#ec4899'];
+            heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+            
+            heart.innerHTML = '<i data-lucide="heart" class="fill-current"></i>';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heart.style.fontSize = (Math.random() * 15 + 10) + 'px';
+            
+            container.appendChild(heart);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                heart.remove();
+            }, 6000);
+        }
+
+        function triggerLove() {
+            for(let i = 0; i < 40; i++) {
+                setTimeout(createHeart, i * 60);
+            }
+        }
+
+        // Cœurs ambiants légers
+        setInterval(createHeart, 2500);
+        
+        // Initialisation
+        updateCounter();
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -7,11 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #fff1f2 0%, #fce7f3 100%);
             overflow-x: hidden;
+            touch-action: manipulation;
         }
         .font-romantic { font-family: 'Dancing Script', cursive; }
         
@@ -21,170 +23,276 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 32px;
             box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.1);
+            position: relative;
+            z-index: 10;
         }
 
+        /* --- CONTENEUR CŒURS (Fixé au premier plan mais cliquable à travers) --- */
+        #heart-container {
+            position: fixed;
+            inset: 0;
+            z-index: 50; /* Passe au dessus de tout */
+            pointer-events: none; /* Permet de cliquer sur les boutons en dessous */
+        }
+
+        /* --- BATTERIE --- */
+        .battery-container {
+            width: 100px;
+            height: 45px;
+            border: 3px solid #333;
+            border-radius: 12px;
+            position: relative;
+            padding: 3px;
+        }
+        .battery-container::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 12px;
+            width: 6px;
+            height: 15px;
+            background: #333;
+            border-radius: 0 4px 4px 0;
+        }
+        #battery-level {
+            height: 100%;
+            width: 100%;
+            background: #22c55e;
+            border-radius: 6px;
+            transition: width 0.3s ease, background 0.5s ease;
+        }
+
+        /* --- MÉTÉO --- */
+        #weather-card {
+            background: linear-gradient(180deg, #57a3e7 0%, #a2d2f7 100%);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            min-height: 380px;
+        }
+        #weather-card.is-hot {
+            background: linear-gradient(180deg, #f97316 0%, #dc2626 100%);
+            transform: scale(1.02);
+        }
+        .weather-content { transition: opacity 0.4s ease; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- ANIMATIONS --- */
         .heart {
             position: absolute;
             color: #fb7185;
             pointer-events: none;
-            z-index: 0;
             animation: floatUp linear forwards;
         }
-
         @keyframes floatUp {
             0% { transform: translateY(100vh) scale(0); opacity: 0; }
             10% { opacity: 0.8; }
             100% { transform: translateY(-10vh) scale(1.5) rotate(360deg); opacity: 0; }
         }
-
-        .pulse-heart {
-            animation: pulse 2s infinite;
+        .pulse-heart { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        .glow-hot {
+            filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.9));
+            animation: flame-bounce 1s infinite alternate;
         }
+        @keyframes flame-bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        /* Correction appearance déprécié */
+        input[type=range] { 
+            -webkit-appearance: none; 
+            appearance: none; 
+            width: 100%; 
+            background: transparent; 
         }
-
-        @keyframes countIn {
-            from { opacity: 0; transform: scale(0.5); }
-            to { opacity: 1; transform: scale(1); }
+        input[type=range]::-webkit-slider-runnable-track { 
+            width: 100%; height: 8px; background: #fee2e2; border-radius: 4px; 
         }
-        .animate-count {
-            animation: countIn 1s ease-out forwards;
-        }
-
-        .img-container {
-            max-width: 100%;
-            height: auto;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            appearance: none; 
+            height: 22px; width: 22px; border-radius: 50%; background: #f43f5e; margin-top: -7px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
         }
     </style>
 </head>
 <body class="min-h-screen text-gray-800">
 
-    <!-- Animation de cœurs en arrière-plan -->
-    <div id="heart-container" class="fixed inset-0 pointer-events-none"></div>
+    <div id="heart-container"></div>
 
-    <main class="relative z-10 max-w-2xl mx-auto px-4 py-12">
+    <main class="relative z-20 max-w-2xl mx-auto px-4 py-12 space-y-8">
         
-        <!-- Header -->
-        <header class="text-center mb-12">
+        <header class="text-center mb-8">
             <div class="inline-block p-3 bg-white rounded-full shadow-sm mb-6 pulse-heart">
                 <i data-lucide="heart" class="text-rose-500 fill-rose-500 w-8 h-8"></i>
             </div>
             <h1 class="text-5xl md:text-7xl font-romantic text-rose-600 mb-2">Un an avec toi</h1>
-            <p class="text-lg text-rose-400 font-light italic">Mon amoureuse</p>
+            <p class="text-lg text-rose-400 font-light italic text-center">Mon amoureuse</p>
         </header>
 
-        <!-- Section Compteur -->
-        <section class="mb-12 flex justify-center">
-            <div class="glass p-10 text-center w-full relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10">
-                    <i data-lucide="map-pinned" class="w-16 h-16 text-rose-600"></i>
-                </div>
-                
-                <h2 class="text-[10px] uppercase tracking-[0.3em] text-rose-400 mb-4 font-semibold">Depuis notre rencontre</h2>
-                
-                <div id="days-container" class="animate-count flex items-baseline justify-center gap-2">
-                    <span id="days" class="text-7xl md:text-8xl font-bold text-gray-800 tracking-tighter line-height-1">0</span>
-                    <span class="font-romantic text-3xl md:text-4xl text-rose-500 mb-2">jours</span>
-                </div>
-                
-                <div class="text-sm uppercase tracking-widest text-rose-500 font-bold mt-2">Se sont écoulés</div>
+        <section class="glass p-8 text-center overflow-hidden">
+            <h2 class="text-[10px] uppercase tracking-[0.3em] text-rose-400 mb-6 font-semibold">Depuis notre rencontre</h2>
+            <div class="mb-6">
+                <span id="days" class="text-7xl md:text-9xl font-bold text-gray-800 tracking-tighter leading-none">0</span>
+                <span class="font-romantic text-3xl text-rose-500 ml-2">jours</span>
+            </div>
+            <div class="flex justify-center gap-6 pt-4 border-t border-rose-100/50">
+                <div class="text-center"><span id="hours" class="block text-2xl font-semibold">00</span><span class="text-[9px] uppercase tracking-widest text-rose-400">Heures</span></div>
+                <div class="text-center"><span id="minutes" class="block text-2xl font-semibold">00</span><span class="text-[9px] uppercase tracking-widest text-rose-400">Min</span></div>
+                <div class="text-center"><span id="seconds" class="block text-2xl font-bold text-rose-500">00</span><span class="text-[9px] uppercase tracking-widest text-rose-400 font-bold">Sec</span></div>
+            </div>
+            <p class="mt-8 pt-6 border-t border-rose-100/50 text-rose-400 text-sm italic">"La distance n'est qu'un test pour voir jusqu'où l'amour peut voyager."</p>
+        </section>
 
-                <div class="mt-6 pt-6 border-t border-rose-100/50">
-                    <p class="text-rose-400 text-sm italic">"La distance n'est qu'un test pour voir jusqu'où l'amour peut voyager."</p>
+        <section class="glass p-8 text-center space-y-6">
+            <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold">Mon énergie sans toi</h3>
+            <div class="flex flex-col items-center gap-4">
+                <div class="battery-container">
+                    <div id="battery-level"></div>
+                </div>
+                <p id="battery-text" class="text-sm font-medium text-gray-600 italic">Chargement...</p>
+                <div class="pt-2 w-full">
+                    <button onclick="giveKiss()" class="group px-8 py-3 bg-rose-100 hover:bg-rose-200 text-rose-600 rounded-full transition-all flex items-center gap-3 mx-auto active:scale-90 shadow-sm relative z-30">
+                        <i data-lucide="heart-plus" class="w-6 h-6"></i>
+                        <span class="font-bold uppercase text-[10px] tracking-widest">Donner un bisou</span>
+                    </button>
                 </div>
             </div>
         </section>
 
-        <!-- Section Image, Mot et Bouton -->
-        <section class="text-center mb-16">
+        <section class="glass p-8 text-center">
+            <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-8">Rapproche-nous</h3>
+            <div class="relative w-full h-12 flex items-center bg-rose-50/50 rounded-full px-2 border border-rose-100">
+                <div class="flex items-center justify-center bg-white w-8 h-8 rounded-full shadow-sm"><i data-lucide="map-pin" class="text-rose-500 w-4 h-4"></i></div>
+                <div class="relative flex-1 h-full mx-2">
+                    <div id="distance-heart" class="absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-150" style="left: 0%;">
+                        <i data-lucide="heart" class="fill-rose-500 text-rose-500 w-6 h-6 pulse-heart"></i>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center bg-white w-8 h-8 rounded-full shadow-sm"><i data-lucide="map-pin" class="text-rose-500 w-4 h-4"></i></div>
+            </div>
+            <input type="range" min="0" max="100" value="0" class="mt-8 relative z-30" oninput="moveDistance(this.value)">
+            <p id="distance-msg" class="text-sm mt-4 text-rose-400 italic">La distance ne peut rien contre nous.</p>
+        </section>
+
+        <section onmouseenter="toggleWeather(true)" onmouseleave="toggleWeather(false)" ontouchstart="toggleWeather(true)" ontouchend="toggleWeather(false)">
+            <p class="text-[10px] text-center uppercase tracking-widest text-rose-400 mb-3 opacity-70 animate-pulse">Reste appuyée ici...</p>
+            <div id="weather-card" class="p-8 rounded-[40px] text-white shadow-xl overflow-hidden glass border-0">
+                <div id="weather-content" class="weather-content relative z-10"></div>
+                <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            </div>
+        </section>
+
+        <section class="text-center space-y-8 pb-12">
             <div class="glass p-6 md:p-10 flex flex-col items-center gap-8">
-                <!-- Image -->
                 <div class="w-full max-w-sm overflow-hidden rounded-2xl border-4 border-white shadow-xl">
-                    <img 
-                        src="Luna.png" 
-                        alt="Message d'amour" 
-                        class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-500"
-                    >
+                    <img src="Luna.png" alt="Luna" class="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-500">
                 </div>
-
-                <!-- Petit mot -->
-                <div class="max-w-md">
-                    <p class="text-gray-700 italic leading-relaxed text-base font-light">
-                        "Un an de FaceTime, de souvenirs gravés... Quelle année incroyable pour nos 18 ans... Entre nos premiers pas à l'université et la distance, on a tout surmonté ensemble. Je suis tellement fier de nous et de ce premier chapitre."
-                    </p>
-                </div>
-
-                <!-- Bouton Conservé -->
-                <button onclick="triggerLove()" class="group relative px-10 py-4 bg-rose-600 text-white rounded-full overflow-hidden transition-all active:scale-95 shadow-lg shadow-rose-300 hover:bg-rose-700">
-                    <span class="relative z-10 flex items-center gap-3 font-semibold text-base">
-                        <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
-                        Je t'aime
-                    </span>
+                <p class="text-gray-700 italic font-light leading-relaxed">"Un an de FaceTime, de souvenirs gravés... Entre nos premiers pas à l'université et la distance, on a tout surmonté ensemble. Je suis tellement fier de nous."</p>
+                <button onclick="triggerLove()" class="px-12 py-4 bg-rose-600 text-white rounded-full font-bold shadow-lg shadow-rose-300 active:scale-95 transition-all flex items-center gap-3 relative z-30">
+                    <i data-lucide="heart" class="w-5 h-5 fill-current"></i> Je t'aime
                 </button>
             </div>
         </section>
-
-        <!-- Footer -->
-        <footer class="text-center text-rose-300 pb-10">
-            <p class="text-[10px] uppercase tracking-[0.4em]">Pour toujours</p>
-            <p class="text-[10px] uppercase tracking-[0.4em]">(Plus que toi)</p>
-        </footer>
+        
+        <footer class="text-center text-rose-300 pb-10"><p class="text-[10px] uppercase tracking-[0.4em]">Pour toujours (Plus que toi)</p></footer>
     </main>
 
     <script>
-        // --- CONFIGURATION ---
-        // Date de votre rencontre : (Année, Mois-1, Jour)
-        const startDate = new Date(2025, 2, 30); 
+        const startDate = new Date(2025, 1, 22, 0, 0, 0);
+        let currentBattery = 100;
+        let currentWeatherMode = 'cool';
 
         function updateCounter() {
             const now = new Date();
-            const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            
-            const diffTime = Math.abs(today - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            const diff = now - startDate;
+            document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+            document.getElementById('hours').innerText = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+            document.getElementById('minutes').innerText = Math.floor((diff / (1000 * 60)) % 60).toString().padStart(2, '0');
+            document.getElementById('seconds').innerText = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+        }
 
-            document.getElementById('days').innerText = diffDays;
+        function updateBatteryDisplay() {
+            currentBattery = Math.max(1, Math.min(100, currentBattery));
+            const level = document.getElementById('battery-level');
+            const text = document.getElementById('battery-text');
+            level.style.width = currentBattery + '%';
+            if(currentBattery < 30) { level.style.background = '#ef4444'; text.innerText = "Vite, j'ai besoin de tes bisous ! 🥺"; }
+            else if(currentBattery < 70) { level.style.background = '#f59e0b'; text.innerText = "Ça va mieux avec toi... 🥰"; }
+            else { level.style.background = '#22c55e'; text.innerText = "Rechargé à bloc ! ⚡"; }
+        }
+
+        function giveKiss() { currentBattery += 15; updateBatteryDisplay(); for(let i=0; i<3; i++) createHeart(); }
+
+        function moveDistance(val) {
+            const heart = document.getElementById('distance-heart');
+            const msg = document.getElementById('distance-msg');
+            // Calcul précis pour ne pas sortir du rail
+            heart.style.left = `calc(${val}% - 12px)`; 
+            msg.innerText = val >= 50 && val <= 80 ? "Enfin réunis ! ❤️" : (val > 80 ? "Dans tes bras... le paradis." : "La distance ne peut rien contre nous.");
+        }
+
+        function renderWeather(mode) {
+            const container = document.getElementById('weather-content');
+            const isHot = mode === 'hot';
+            container.innerHTML = `
+                <div class="flex justify-between mb-6">
+                    <div><h3 class="text-xs uppercase font-bold opacity-80">Météo du cœur</h3><p class="text-3xl font-bold">${isHot ? 'Canicule 🥵' : 'Ciel radieux'}</p></div>
+                    <div class="p-3 bg-white/20 rounded-full ${isHot ? 'glow-hot' : ''}"><i data-lucide="${isHot ? 'flame' : 'sun'}" class="w-8 h-8 text-amber-200 fill-amber-100"></i></div>
+                </div>
+                <div class="text-center mb-10"><span class="text-7xl md:text-9xl font-black relative">${isHot ? '100' : '31'}<span class="text-4xl absolute top-0 -right-10">${isHot ? '°' : '°'}</span></span><p class="text-2xl font-romantic text-amber-100 mt-4">${isHot ? 'Quand je te vois' : 'Partout où tu es'}</p></div>
+                <div id="forecast-row" class="flex gap-4 overflow-x-auto scrollbar-hide text-center border-t border-white/20 pt-6"></div>
+            `;
+            const row = document.getElementById('forecast-row');
+            const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jui", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+            const currentMonth = new Date().getMonth();
+            for(let i=0; i<12; i++) {
+                const m = months[(currentMonth + i) % 12];
+                const div = document.createElement('div'); div.className = "flex-none w-16";
+                div.innerHTML = `<p class="text-[10px] opacity-70 mb-2 uppercase">${m}</p><i data-lucide="${isHot ? 'flame' : 'sun'}" class="w-5 h-5 mx-auto mb-2 ${isHot ? 'text-orange-300' : 'text-blue-100'}"></i><p class="text-sm font-bold">${isHot ? '100°' : '31°'}</p>`;
+                row.appendChild(div);
+            }
+            lucide.createIcons();
+        }
+
+        function toggleWeather(isHot) {
+            const newMode = isHot ? 'hot' : 'cool';
+            if (currentWeatherMode === newMode) return;
+            currentWeatherMode = newMode;
+            const card = document.getElementById('weather-card');
+            const content = document.getElementById('weather-content');
+            content.style.opacity = '0';
+            if(isHot) card.classList.add('is-hot'); else card.classList.remove('is-hot');
+            setTimeout(() => { renderWeather(newMode); content.style.opacity = '1'; }, 300);
         }
 
         function createHeart() {
             const container = document.getElementById('heart-container');
             const heart = document.createElement('div');
-            heart.classList.add('heart');
-            
-            const colors = ['#fb7185', '#fda4af', '#f43f5e', '#ec4899'];
-            heart.style.color = colors[Math.floor(Math.random() * colors.length)];
-            
-            heart.innerHTML = '<i data-lucide="heart" class="fill-current"></i>';
+            heart.className = 'heart'; heart.innerHTML = '<i data-lucide="heart" class="fill-current"></i>';
             heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
-            heart.style.fontSize = (Math.random() * 15 + 10) + 'px';
-            
-            container.appendChild(heart);
+            heart.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            heart.style.opacity = Math.random() * 0.5 + 0.3;
+            container.appendChild(heart); 
             lucide.createIcons();
-
-            setTimeout(() => {
-                heart.remove();
-            }, 6000);
+            setTimeout(() => heart.remove(), 5000);
         }
 
         function triggerLove() {
-            for(let i = 0; i < 50; i++) {
-                setTimeout(createHeart, i * 60);
-            }
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#fb7185', '#ec4899'] });
+            for(let i=0; i<40; i++) setTimeout(createHeart, i * 100);
         }
 
-        // Cœurs ambiants légers
-        setInterval(createHeart, 1000);
+        // --- LOOPS ---
+        setInterval(updateCounter, 1000);
+        setInterval(() => { currentBattery -= 2.5; updateBatteryDisplay(); }, 1000);
+        setInterval(createHeart, 2500);
         
-        // Initialisation
+        // --- INIT ---
         updateCounter();
+        updateBatteryDisplay();
+        renderWeather('cool');
         lucide.createIcons();
     </script>
 </body>

@@ -62,23 +62,6 @@
             transition: width 0.3s ease, background 0.5s ease;
         }
 
-        /* --- MÉTÉO --- */
-        #weather-card {
-            background: linear-gradient(180deg, #57a3e7 0%, #a2d2f7 100%);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            min-height: 380px;
-        }
-        #weather-card.is-hot {
-            background: linear-gradient(180deg, #f97316 0%, #dc2626 100%);
-            transform: scale(1.02);
-        }
-        .weather-content { transition: opacity 0.4s ease; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
         /* --- ANIMATIONS --- */
         .heart {
             position: absolute;
@@ -99,22 +82,6 @@
             animation: flame-bounce 1s infinite alternate;
         }
         @keyframes flame-bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
-
-        /* Correction appearance déprécié */
-        input[type=range] { 
-            -webkit-appearance: none; 
-            appearance: none; 
-            width: 100%; 
-            background: transparent; 
-        }
-        input[type=range]::-webkit-slider-runnable-track { 
-            width: 100%; height: 8px; background: #fee2e2; border-radius: 4px; 
-        }
-        input[type=range]::-webkit-slider-thumb { 
-            -webkit-appearance: none; 
-            appearance: none; 
-            height: 22px; width: 22px; border-radius: 50%; background: #f43f5e; margin-top: -7px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-        }
     </style>
 </head>
 <body class="min-h-screen text-gray-800">
@@ -161,29 +128,6 @@
             </div>
         </section>
 
-        <section class="glass p-8 text-center">
-            <h3 class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-8">Rapproche-nous</h3>
-            <div class="relative w-full h-12 flex items-center bg-rose-50/50 rounded-full px-2 border border-rose-100">
-                <div class="flex items-center justify-center bg-white w-8 h-8 rounded-full shadow-sm"><i data-lucide="map-pin" class="text-rose-500 w-4 h-4"></i></div>
-                <div class="relative flex-1 h-full mx-2">
-                    <div id="distance-heart" class="absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-150" style="left: 0%;">
-                        <i data-lucide="heart" class="fill-rose-500 text-rose-500 w-6 h-6 pulse-heart"></i>
-                    </div>
-                </div>
-                <div class="flex items-center justify-center bg-white w-8 h-8 rounded-full shadow-sm"><i data-lucide="map-pin" class="text-rose-500 w-4 h-4"></i></div>
-            </div>
-            <input type="range" min="0" max="100" value="0" class="mt-8 relative z-30" oninput="moveDistance(this.value)">
-            <p id="distance-msg" class="text-sm mt-4 text-rose-400 italic">La distance ne peut rien contre nous.</p>
-        </section>
-
-        <section onmouseenter="toggleWeather(true)" onmouseleave="toggleWeather(false)" ontouchstart="toggleWeather(true)" ontouchend="toggleWeather(false)">
-            <p class="text-[10px] text-center uppercase tracking-widest text-rose-400 mb-3 opacity-70 animate-pulse">Reste appuyée ici...</p>
-            <div id="weather-card" class="p-8 rounded-[40px] text-white shadow-xl overflow-hidden glass border-0">
-                <div id="weather-content" class="weather-content relative z-10"></div>
-                <div class="absolute -bottom-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-            </div>
-        </section>
-
         <section class="text-center space-y-8 pb-12">
             <div class="glass p-6 md:p-10 flex flex-col items-center gap-8">
                 <div class="w-full max-w-sm overflow-hidden rounded-2xl border-4 border-white shadow-xl">
@@ -225,48 +169,6 @@
 
         function giveKiss() { currentBattery += 15; updateBatteryDisplay(); for(let i=0; i<3; i++) createHeart(); }
 
-        function moveDistance(val) {
-            const heart = document.getElementById('distance-heart');
-            const msg = document.getElementById('distance-msg');
-            // Calcul précis pour ne pas sortir du rail
-            heart.style.left = `calc(${val}% - 12px)`; 
-            msg.innerText = val >= 50 && val <= 80 ? "Enfin réunis ! ❤️" : (val > 80 ? "Dans tes bras... le paradis." : "La distance ne peut rien contre nous.");
-        }
-
-        function renderWeather(mode) {
-            const container = document.getElementById('weather-content');
-            const isHot = mode === 'hot';
-            container.innerHTML = `
-                <div class="flex justify-between mb-6">
-                    <div><h3 class="text-xs uppercase font-bold opacity-80">Météo du cœur</h3><p class="text-3xl font-bold">${isHot ? 'Canicule 🥵' : 'Ciel radieux'}</p></div>
-                    <div class="p-3 bg-white/20 rounded-full ${isHot ? 'glow-hot' : ''}"><i data-lucide="${isHot ? 'flame' : 'sun'}" class="w-8 h-8 text-amber-200 fill-amber-100"></i></div>
-                </div>
-                <div class="text-center mb-10"><span class="text-7xl md:text-9xl font-black relative">${isHot ? '100' : '31'}<span class="text-4xl absolute top-0 -right-10">${isHot ? '°' : '°'}</span></span><p class="text-2xl font-romantic text-amber-100 mt-4">${isHot ? 'Quand je te vois' : 'Partout où tu es'}</p></div>
-                <div id="forecast-row" class="flex gap-4 overflow-x-auto scrollbar-hide text-center border-t border-white/20 pt-6"></div>
-            `;
-            const row = document.getElementById('forecast-row');
-            const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jui", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-            const currentMonth = new Date().getMonth();
-            for(let i=0; i<12; i++) {
-                const m = months[(currentMonth + i) % 12];
-                const div = document.createElement('div'); div.className = "flex-none w-16";
-                div.innerHTML = `<p class="text-[10px] opacity-70 mb-2 uppercase">${m}</p><i data-lucide="${isHot ? 'flame' : 'sun'}" class="w-5 h-5 mx-auto mb-2 ${isHot ? 'text-orange-300' : 'text-blue-100'}"></i><p class="text-sm font-bold">${isHot ? '100°' : '31°'}</p>`;
-                row.appendChild(div);
-            }
-            lucide.createIcons();
-        }
-
-        function toggleWeather(isHot) {
-            const newMode = isHot ? 'hot' : 'cool';
-            if (currentWeatherMode === newMode) return;
-            currentWeatherMode = newMode;
-            const card = document.getElementById('weather-card');
-            const content = document.getElementById('weather-content');
-            content.style.opacity = '0';
-            if(isHot) card.classList.add('is-hot'); else card.classList.remove('is-hot');
-            setTimeout(() => { renderWeather(newMode); content.style.opacity = '1'; }, 300);
-        }
-
         function createHeart() {
             const container = document.getElementById('heart-container');
             const heart = document.createElement('div');
@@ -292,7 +194,6 @@
         // --- INIT ---
         updateCounter();
         updateBatteryDisplay();
-        renderWeather('cool');
         lucide.createIcons();
     </script>
 </body>
